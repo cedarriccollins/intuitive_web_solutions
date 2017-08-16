@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Issues API</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+<script src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.9.0.js"></script>
+<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+<script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-inner">
+            <a class="brand" href="#">Issue Tool</a>
+        </div>
+    </div>
+    <div id="main" class="container">
+
+       <table class="table table-striped">
+    <tr><td style="width: 1px;"></td><td><b>Issue</b></td><td><b>Client</b></td><td><b>Target Date</b></td><td><b>Options</b></td></tr>
+    <!-- ko foreach: issues -->
+    <tr>
+        <td>
+            <span data-bind="visible: done" class="label label-success">Done</span>
+            <span data-bind="visible: !done()" class="label label-important">In Progress</span>
+        </td>
+        <td>
+            <p><b>Title: </b><b title data-bind="text: title"></b></p>
+            <p><b>Description: </b> <i data-bind="text: description"></i></p>
+            <p><b>Product Area: </b> <i data-bind="text: product_area"></i></p>
+            <p><b>Client Priority: </b> <i data-bind="text: client_priority"></i></p>
+        </td>
+
+        
+        <td><b data-bind="text: client_name"></b></td>
+        <td><b data-bind="text: target_date"></b></td>
+        <td>
+            <button data-bind="click: $parent.beginEdit" class="btn">Edit</button>
+            <button data-bind="click: $parent.remove" class="btn">Delete</button>
+           <span data-bind="visible: done"> 
+                <button data-bind="click: $parent.markInProgress" class="btn">Mark In Progress</button>
+            </span>
+             <span data-bind="visible: !done()">
+                <button data-bind="click: $parent.markDone" class="btn">Mark Done</button>
+            </span>
+        </td>
+    </tr>
+    <!-- /ko -->
+</table>
+<button data-bind="click: beginAdd" class="btn">Add Issue</button>
+
+</div>
+
+<!-- add issue -->
+<div id="add" class="modal hide fade" tabindex="=1" role="dialog" aria-labelledby="addDialogLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="addDialogLabel">Add Issue</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label" for="inputIssue">Issue</label>
+                <div class="controls">
+                    <input data-bind="value: title" type="text" id="inputIssue" placeholder="Issue title" style="width: 150px;">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputDescription">Description</label>
+                <div class="controls">
+                    <input data-bind="value: description" type="text" id="inputDescription" placeholder="Description" style="width: 300px;">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputClientName">Client Name</label>
+                <div class="controls">
+                    <input data-bind="value: client_name" type="text" id="inputClientName" placeholder="Client Name" style="width: 300px;">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputProductArea">Product Area</label>
+                <div class="controls">
+                    <input data-bind="value: product_area" type="text" id="inputProductArea" placeholder="Product Area" style="width: 300px;">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputClientPriority">Client Priority</label>
+                <div class="controls">
+                    <input data-bind="value: client_priority" type="text" id="inputClientPriority" placeholder="Client Priority" style="width: 300px;">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputTargetDate">Target Date</label>
+                <div class="controls">
+                    <input data-bind="value: target_date" type="text" id="inputTargetDate" placeholder="Target Date" style="width: 300px;">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button data-bind="click: addIssue" class="btn btn-primary">Add Issue</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    </div>
+</div>
+
+
+
+
+
+
+
+ <script type="text/javascript">
+
+function IssuesViewModel() {
+        var self = this;
+        self.issuesURI = 'http://localhost:5000/api/v1.0/issues';
+        self.username = 'cedarric';
+        self.password = 'python_rocks';
+        self.issues = ko.observableArray();
+        
+
+        self.ajax = function(uri, method, data) {
+            var request = {
+                url: uri,
+                type: method,
+                contentType: "application/json",
+                accepts: "application/json",
+                headers: { 
+       
+        "X-HTTP-Method-Override": "*"},
+                cache: false,
+                dataType: 'json',
+                data: JSON.stringify(data),
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("Authorization", 
+                        "Basic " + btoa(self.username + ":" + self.password));
+                },
+                error: function(jqXHR) {
+                    console.log("ajax error " + jqXHR.status);
+                }
+            };
+            return $.ajax(request);
+        }
+
+    
+        self.beginAdd = function()
+        {
+            $('#add').modal('show');
+        }
+
+        self.beginEdit = function(issue) {
+            alert("Edit: " + issue.title());
+        }
+        self.remove = function(issue) {
+            alert("Remove: " + issue.title());
+        }
+        self.markInProgress = function(issue) {
+            issue.done(false);
+        }
+        self.markDone = function(issue) {
+            issue.done(true);
+        }
+
+        self.ajax(self.issuesURI, 'GET').done(function(data) {
+
+            for (var i = 0; i < data.length; i++) {
+                self.issues.push({
+                    uri: ko.observable(data[i].uri),
+                    title: ko.observable(data[i].title),
+                    description: ko.observable(data[i].description),
+                    client_name: ko.observable(data[i].client_name),
+                    client_priority: ko.observable(data[i].client_priority),
+                    product_area: ko.observable(data[i].product_area),
+                    target_date: ko.observable(data[i].target_date),
+                    done: ko.observable(data[i].done) 
+                });
+            }
+        });
+
+        self.add = function(issue)
+        {
+            self.ajax(self.issueURI, 'POST', issue).done(function(data) {
+                self.tasks.push({
+                    uri: ko.observable(data.issue.uri),
+                    title: ko.observable(data.issue.title),
+                    description: ko.observable(issue.task.description),
+                    client_name: ko.observable(data.client_name),
+                    client_priority: ko.observable(data.client_priority),
+                    product_area: ko.observable(data.product_area),
+                    target_date: ko.observable(data.target_date.area),
+                    done: ko.observable(data.issue.done)
+                });
+            });
+        }
+    }
+function AddIssueViewModel() {
+        var self = this;
+        self.title = ko.observable();
+        self.description = ko.observable();
+        self.client_name = ko.observable();
+        self.client_priority = ko.observable();
+        self. product_area = ko.observable();
+        self.target_date = ko.observable();
+            
+
+        self.addIssue = function() {
+            $('#add').modal('hide');
+            issueViewModel.add({
+                title: self.title(),
+                description: self.description(),
+                client_name: self.client_name(),
+                client_priority: self.client_priority(),
+                product_area: self.product_area(),
+                target_date: self.target_date()    
+
+                });
+        self.title("");
+        self.description("");
+        self.client_name(""),
+        self.client_priority(""),
+        self.product_area(""),
+        self.target_date("")   
+        }
+    } 
+
+    
+    
+    var issueViewModel = new IssuesViewModel();
+    var addIssueViewModel = new AddIssueViewModel();
+    ko.applyBindings(issueViewModel, $('#main')[0]);
+    ko.applyBindings(addIssueViewModel, $('#add')[0]);
+
+
+    </script>
+</body>
+</html>
+
+
