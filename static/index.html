@@ -104,16 +104,11 @@
 </div>
 
 
-
-
-
-
-
  <script type="text/javascript">
 
 function IssuesViewModel() {
         var self = this;
-        self.issuesURI = 'http://localhost:5000/api/v1.0/issues';
+        self.issuesURI = 'http://127.0.0.1:5000/api/v1.0/issues';
         self.username = 'cedarric';
         self.password = 'python_rocks';
         self.issues = ko.observableArray();
@@ -125,16 +120,18 @@ function IssuesViewModel() {
                 type: method,
                 contentType: "application/json",
                 accepts: "application/json",
-                headers: { 
-       
-        "X-HTTP-Method-Override": "*"},
+                cache: false,
+                headers: {
+                "Access-Control-Allow-Methods":"POST, OPTIONS",
+                },
+                
                 cache: false,
                 dataType: 'json',
                 data: JSON.stringify(data),
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("Authorization", 
                         "Basic " + btoa(self.username + ":" + self.password));
-                },
+                                   },
                 error: function(jqXHR) {
                     console.log("ajax error " + jqXHR.status);
                 }
@@ -179,8 +176,10 @@ function IssuesViewModel() {
 
         self.add = function(issue)
         {
-            self.ajax(self.issueURI, 'POST', issue).done(function(data) {
-                self.tasks.push({
+            //self.ajax(self.issueURI, 'POST', issue).done(function(data) {
+            self.ajax("http://127.0.0.1:5000/api/v1.0/issues/create", 'POST', issue).done(function(data) {
+                
+                self.issues.push({
                     uri: ko.observable(data.issue.uri),
                     title: ko.observable(data.issue.title),
                     description: ko.observable(issue.task.description),

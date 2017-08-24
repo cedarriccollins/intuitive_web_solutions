@@ -9,9 +9,10 @@ import json
 import decimal, datetime
 from flask_cors import CORS, cross_origin
 
-#app = Flask(__name__, static_url_path = "")
-app = Flask(__name__)
-CORS(app , resources=r'/api/*')
+app = Flask(__name__, static_url_path = "")
+
+#CORS(app , resources=r'/api/*')
+cors = CORS(app, resources={r'/api/*': {"origins": "http://127.0.0.1:5000"}})
 auth = HTTPBasicAuth()
 
 #-- move to config file
@@ -45,9 +46,9 @@ def not_found(error):
 def not_found(error):
     return make_response(jsonify( { 'error': 'Not found' } ), 404)
 
-@app.errorhandler(405)
-def not_found(error):
-    return make_response(jsonify( { 'error': 'Method Not Allowed' } ), 405)
+#@app.errorhandler(405)
+#def not_allowed(error):
+#    return make_response(jsonify( { 'error': 'Method Not Allowed'} ), 405)
 
 
 def alchemyencoder(obj):
@@ -90,19 +91,22 @@ def get_issue_per_company(client_name):
     data = json.dumps([dict(r) for r in res],default=alchemyencoder)
     return Response(data, mimetype='application/json')
 
-@app.route('/api/v1.0/issues', methods = ['GET','POST'])
-@cross_origin()
+@app.route('/api/v1.0/issues/create', methods = ['POST'])
 @auth.login_required
+@cross_origin(allow_headers=['Content-Type'])
 def create_issue():
+    if request.method == 'POST':
+        print json.dumps(request.json)
 
-    if not request.json or not 'title' in request.json:
-        abort(400)
-
-    insert = client_issue_table.insert().values(request.json, \
-        product_area=PRODUCT_AREAS[request.json['product_area']],
+    insert = client_issue_table.insert().values(request.json, 
+        product_area=PRODUCT_AREAS[int(request.json['product_area'])], 
         client_name =request.json['client_name'].upper())
     insert.execute()
+
     return jsonify( [make_public_issue(request.get_json())] ), 201
+
+
+
 
 @app.route('/api/v1.0/issues/<int:issue_id>', methods = ['PUT'])
 @auth.login_required
@@ -144,9 +148,12 @@ def delete_issue(issue_id):
     result = engine.execute(client_issue_table.delete().where(client_issue_table.c.issue_id==issue_id))
     print result
     return jsonify( { 'deleted':issue_id,'result': True } )
-    
+
 if __name__ == '__main__':
+    print app.url_map
     app.run(debug = True)
+
+
 
 
 
