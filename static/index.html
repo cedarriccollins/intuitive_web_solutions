@@ -176,18 +176,20 @@ function IssuesViewModel() {
 
         self.add = function(issue)
         {
+            console.log( issue)
+            
             //self.ajax(self.issueURI, 'POST', issue).done(function(data) {
             self.ajax("http://127.0.0.1:5000/api/v1.0/issues/create", 'POST', issue).done(function(data) {
                 
                 self.issues.push({
-                    uri: ko.observable(data.issue.uri),
-                    title: ko.observable(data.issue.title),
-                    description: ko.observable(issue.task.description),
+                    uri: ko.observable(data.uri),
+                    title: ko.observable(data.title),
+                    description: ko.observable(data.description),
                     client_name: ko.observable(data.client_name),
                     client_priority: ko.observable(data.client_priority),
                     product_area: ko.observable(data.product_area),
-                    target_date: ko.observable(data.target_date.area),
-                    done: ko.observable(data.issue.done)
+                    target_date: ko.observable(data.target_date),
+                    done: ko.observable(data.done)
                 });
             });
         }
